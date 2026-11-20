@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>生态鱼缸</title>
+    <link rel="preload" as="image" href="assets/aquarium-loading.jpg">
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="vendor/three.min.js"></script>
+    <script defer src="vendor/gltf-loader.min.js"></script>
+    <script defer src="aquarium-layout.js"></script>
+    <script defer src="sand-physics.js"></script>
+    <script defer src="assets/substrate/substrate-scans.js"></script>
+    <script defer src="assets/substrate/river-detail.js"></script>
+    <script defer src="sand-material.js"></script>
+    <script defer src="substrate-grains.js"></script>
+    <script defer src="sediment-suspension.js"></script>
+    <script defer src="assets/stone/stone-scan-data.js"></script>
+    <script defer src="assets/stone/carbis-pebble.js"></script>
+    <script defer src="assets/stone/measured-specimens.js"></script>
+    <script defer src="assets/stone/rock-surfaces.js"></script>
+    <script defer src="assets/stone/tripo/ohko-runtime.js"></script>
+    <script defer src="assets/stone/tripo/ohko-weathered.js"></script>
+    <script defer src="stone-model.js"></script>
+    <script defer src="assets/plants/leaf-photo-data.js"></script>
+    <script defer src="plant-model.js"></script>
+    <script defer src="fish-motion.js"></script>
+    <script defer src="assets/fish/fish-photo-data.js"></script>
+    <script defer src="fish-species.js"></script>
+    <script defer src="fish-models.js"></script>
+    <script defer src="fish-food.js"></script>
+    <script defer src="assets/living-room-v4/living-room-data.js"></script>
+    <script defer src="assets/living-room-v4/room-grain.js"></script>
+    <script defer src="living-room-model.js"></script>
+    <script defer src="room-daylight.js"></script>
+    <script defer src="aquarium-daylight.js"></script>
+    <script defer src="aquarium-glass.js"></script>
+    <script defer src="aquarium-water.js"></script>
+    <script defer src="aquarium-caustics.js"></script>
+    <script defer src="aquarium-aeration.js"></script>
+    <script defer src="aquarium-decor.js"></script>
+    <script defer src="scene.js"></script>
+    <script defer src="placement.js"></script>
+    <script defer src="stock-preview.js"></script>
+    <script defer src="main.js"></script>
+  </head>
+  <body>
+    <main class="tank-stage">
+      <canvas id="aquarium" tabindex="0" aria-label="客厅里的 3D 鱼缸，可旋转观察、喂鱼和布置造景" inert></canvas>
+      <div class="tank-tools">
+        <button id="tool-toggle" class="tool-toggle" type="button" aria-label="打开物品抽屉" title="物品抽屉" aria-expanded="false" aria-controls="tool-menu" hidden>
+          <span class="tool-icon" aria-hidden="true"></span>
+        </button>
+        <aside id="tool-menu" class="tool-menu" aria-labelledby="drawer-title" hidden>
+          <header class="drawer-header">
+            <h2 id="drawer-title">物品抽屉</h2>
+            <button id="drawer-close" class="drawer-close" type="button" aria-label="收起物品抽屉" title="收起抽屉"></button>
+          </header>
+          <div class="drawer-tabs" role="group" aria-label="物品分类">
+            <button type="button" data-tool="fish" aria-pressed="true">鱼</button>
+            <button type="button" data-tool="plant" aria-pressed="false">水草</button>
+            <button type="button" data-tool="stone" aria-pressed="false">石头</button>
+            <button type="button" data-tool="sand" aria-pressed="false">底砂</button>
+          </div>
+          <div class="drawer-body">
+            <section id="stock-panel" class="stock-panel" aria-label="物品预览">
+              <p class="stock-hint">拖动模型可旋转</p>
+              <div id="stock-grid" class="stock-grid"></div>
+            </section>
+          </div>
+          <footer class="drawer-footer">
+            <div class="drawer-utilities">
+              <button type="button" class="drawer-utility" data-tool="feed">喂食</button>
+              <button type="button" class="drawer-utility" id="lighting-toggle" aria-expanded="false" aria-controls="lighting-panel">光影</button>
+            </div>
+            <p id="stock-status" role="status"></p>
+            <section id="lighting-panel" class="lighting-panel" aria-label="昼夜光影" hidden>
+              <label for="lighting-time">时间 <output id="lighting-label" for="lighting-time">12:00</output></label>
+              <input id="lighting-time" type="range" min="0" max="1439" step="1" value="720">
+              <div class="lighting-actions">
+                <button type="button" id="lighting-local" aria-pressed="true">本地时间</button>
+                <button type="button" id="lighting-preview" aria-pressed="false">快速播放</button>
+              </div>
+            </section>
+          </footer>
+        </aside>
+        <div class="tank-mode" id="tank-mode" hidden>
+          <span id="mode-hint"></span>
+          <button id="mode-done" type="button">完成</button>
+        </div>
+      </div>
+      <div id="tank-loading" class="tank-loading" role="status">
+        <div class="tank-loading-bubbles" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div class="tank-loading-status">
+          <p>正在加载鱼缸…</p>
+          <div class="tank-loading-progress" aria-hidden="true"></div>
+        </div>
+      </div>
+      <p id="render-error" class="render-error" role="alert" hidden>场景加载失败，请刷新后重试。</p>
+    </main>
+  </body>
+</html>

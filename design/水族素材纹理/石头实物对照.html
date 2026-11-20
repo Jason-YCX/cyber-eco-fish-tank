@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>石头实物与模型对照</title>
+<style>
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:#132323;color:#f0f4ef;font:16px/1.55 system-ui,sans-serif}main{max-width:1500px;margin:auto;padding:20px 3vw}h1{font-size:24px;margin:0 0 12px}p{margin:10px 0;color:#c7d6d1}a{color:#a6e4d2}header,.actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap}label{display:flex;align-items:center;gap:6px}select,button{border:1px solid #66827b;border-radius:4px;background:#253c38;color:white;padding:6px 8px;font:inherit}input{accent-color:#8fcfb3}.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}figure{margin:0;min-width:0}figcaption{padding:4px 0}.viewport{overflow:auto;background:#0e1919;border:1px solid #49605b}.stage{position:relative;overflow:hidden;line-height:0;width:100%;aspect-ratio:1}.stage img,.stage canvas{display:block;position:absolute;max-width:none}.stage canvas{inset:0;width:100%;height:100%}#error{color:#ffcb82}input[type=range]{width:125px}@media(max-width:600px){main{padding:12px}.pair{gap:5px}header,.actions{gap:9px}body{font-size:14px}}
+</style>
+<script src="../../vendor/three.min.js"></script><script src="../../assets/stone/rock-surfaces.js"></script><script src="../../assets/stone/carbis-pebble.js"></script><script src="../../assets/stone/measured-specimens.js"></script><script src="../../stone-model.js"></script></head>
+<body><main><h1>石头实物与模型对照</h1><header>
+<label>实物 <select id="kind"><option value="carbis">圆溪石 · Carbis Bay</option><option value="river">圆溪石 · 222927</option><option value="dragon">黄虎石 · DSP3016</option><option value="slate">红瓦石 · 421</option></select></label>
+<label>实拍角度 <select id="angle"></select></label><label id="rotation">环绕 <input type="range" min="0" max="71" id="turn" value="0"></label><label><input type="checkbox" id="native">按源像素查看</label>
+<label>叠图模型浓度 <input id="mix" type="range" min="0" max="100" value="35"><output id="percent">35%</output></label></header>
+<p id="note"></p><div class="pair"><figure><figcaption>实物照片</figcaption><div class="viewport"><div class="stage" id="photo"></div></div></figure><figure><figcaption>原位叠图 <span id="source"></span></figcaption><div class="viewport"><div class="stage" id="model"></div></div></figure></div>
+<p id="error" role="status"></p><p>两幅图按同一坐标裁切。调到 0% 看实物，100% 看模型。在 1∶1 模式中滚动任一幅图可同步检查局部。</p></main>
+<script>
+const records = {
+ river:{angles:['背面','腹面','左缘','右缘'],images:['top','bottom','left','right'].map(v=>'../../assets/stone/specimens/river-'+v+'.jpg'),note:'同一块康沃尔卵石的四面实拍。白色矿脉和边缘磕缺可作为定位点。',url:'https://finds.org.uk/database/artefacts/record/id/222927'},
+ dragon:{angles:['正面','斜面 A','斜面 B'],images:['1264826023','1264826022','1264826021'].map(i=>'https://cdn.shopify.com/s/files/1/1167/8568/files/dragon-stone-showpieces-dsp3016-'+i+'.jpg'),crop:[338,122],note:'三张照片都属于 DSP3016。市场实拍需联网读取。模型保留实测轮廓与立体匹配的孔槽，表面着色使用独立岩面扫描。',url:'https://buceplant.com/products/dragon-stone-showpieces-dsp3016'},
+ slate:{angles:['斜上方'],images:['../../assets/stone/specimens/slate.jpg'],note:'9.5 厘米的 Ward’s #183 红板岩。可核对的是这一面的层理、断口与外缘。背部深度为估计，模型中已去掉馆藏贴签。',url:'https://geodil.dperkins.org/h/421.html'}
+};
+const carbis=AQUARIUM_CARBIS_PEBBLE.validation;
+records.carbis={angles:carbis.frame_metrics.map(f=>Math.round(f.frame*5)+'°'+(carbis.withheld_frames.includes(f.frame)?' · 独立检验':'')),note:'同一块 Carbis Bay 卵石，每 5° 一次实拍。48 帧用于重建，24 帧留出。环绕按 361 × 294 转台图对齐，勾选源像素可读取约 1444 像素宽的官方细节图。底面被转台遮挡。',url:'https://www.virtualmicroscope.org/content/carbis-bay-pebble'};
+const $=id=>document.getElementById(id), kind=$('kind'), angle=$('angle'), native=$('native'), mix=$('mix');
+const original=new Image(),behind=new Image();$('photo').append(original);$('model').append(behind);
+const turn=$('turn'), tileCanvases=[$('photo'),$('model')].map(el=>{const c=document.createElement('canvas');el.append(c);return c;});
+let tileKey='';
+function turnPhoto(index,scale){
+ const key=index+'-'+scale; if(key===tileKey)return; tileKey=key;
+ const level=scale===4?3:1, w=Math.ceil(5776/Math.pow(2,5-level)),h=Math.ceil(4692/Math.pow(2,5-level));
+ const buffers=tileCanvases.map(c=>{c.width=w;c.height=w;const ctx=c.getContext('2d');ctx.fillStyle='#080808';ctx.fillRect(0,0,w,w);return ctx;});
+ for(let y=0;y<Math.ceil(h/256);y++)for(let x=0;x<Math.ceil(w/256);x++){
+  const tile=new Image();tile.onload=()=>{if(tileKey===key)for(const ctx of buffers)ctx.drawImage(tile,x*256,y*256);};
+  tile.onerror=()=>{if(tileKey===key)$('error').textContent='该转台实拍需要联网，可打开开放大学原始标本记录。';};
+  tile.src='https://www.virtualmicroscope.org/sites/default/files/html5Assets/Carbis_o/data/Carbis/Img'+(27622+index)+'_img/TileGroup0/'+level+'-'+x+'-'+y+'.jpg';
+ }
+}
+const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});$('model').append(renderer.domElement);renderer.setClearColor(0x142423,1);
+const scene=new THREE.Scene(),key=new THREE.DirectionalLight(0xfff4e4,1.12),camera=new THREE.OrthographicCamera();
+scene.add(key,new THREE.HemisphereLight(0xfff9ed,0xd8dcdd,1.95));const models=new Map();
+let current, serial=0;
+function blend(){renderer.domElement.style.opacity=mix.value/100;$('percent').value=mix.value+'%';}
+function frame(){
+ if(!current)return;
+ const {v,side,origin,k,i}=current;
+ const scale=k==='carbis'&&native.checked?4:1;
+ for(const c of tileCanvases)c.hidden=k!=='carbis';
+ for(const im of [original,behind])im.hidden=k==='carbis';
+ if(k==='carbis')turnPhoto(i,scale);
+ const displaySide=side*scale;
+ for(const node of document.querySelectorAll('.stage'))node.style.width=native.checked?Math.round(displaySide)+'px':'100%';
+ for(const im of [original,behind])if(im.naturalWidth){
+  im.style.width=(100*im.naturalWidth/side)+'%';im.style.height=(100*im.naturalHeight/side)+'%';
+  im.style.left=(-100*origin[0]/side)+'%';im.style.top=(-100*origin[1]/side)+'%';
+ }
+ const size=native.checked?Math.ceil(displaySide):Math.min(1400,Math.ceil($('model').clientWidth*devicePixelRatio));
+ renderer.setSize(size,size,false);
+ const looking=new THREE.Vector3(...v.facing);camera.position.copy(looking).multiplyScalar(2);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+ const [a,b]=v.matrix,o=v.origin;
+ const m=new THREE.Matrix4().set(2*a[0]/side,2*a[1]/side,2*a[2]/side,2*(a[3]-o[0])/side-1,
+ -2*b[0]/side,-2*b[1]/side,-2*b[2]/side,1-2*(b[3]-o[1])/side,-2*looking.x,-2*looking.y,-2*looking.z,0,0,0,0,1);
+ camera.projectionMatrix.copy(m).multiply(camera.matrixWorld);camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+ key.position.copy(looking).multiplyScalar(3).add(new THREE.Vector3(-1,2,.7));renderer.render(scene,camera);blend();
+}
+async function show(){
+ const rev=++serial,k=kind.value,r=records[k],i=angle.selectedIndex;
+ let v;
+ if(k==='carbis'){const matrix=carbis.frame_metrics[i].matrix;
+  const f=new THREE.Vector3().crossVectors(new THREE.Vector3(...matrix[0].slice(0,3)),new THREE.Vector3(...matrix[1].slice(0,3))).normalize().negate();
+  v={matrix,facing:f.toArray(),origin:[0,0],side:carbis.dimensions[0]};
+ }else{v=AQUARIUM_STONE_SPECIMENS[k].views[i];tileKey='';}
+ turn.value=i;$('rotation').hidden=k!=='carbis';$('error').textContent='';
+ $('note').textContent=r.note;const a=document.createElement('a');a.href=r.url;a.textContent='原始标本记录';$('source').replaceChildren(a);
+ if(!models.has(k))models.set(k,k==='carbis'?createAquariumStone('river',1):createAquariumStone(k));const model=models.get(k);await model.ready;if(rev!==serial)return;
+ for(const other of models.values())scene.remove(other.mesh);model.mesh.position.set(0,0,0);model.mesh.rotation.set(0,0,0);scene.add(model.mesh);
+ const origin=v.origin.map((x,j)=>x+(r.crop?.[j]||0));current={v,origin,side:v.side,k,i};
+ if(k!=='carbis')for(const im of [original,behind]){im.onload=frame;im.onerror=()=>$('error').textContent='实拍图片未载入，可打开原始标本记录查看。';im.src=r.images[i];}
+ document.querySelectorAll('.viewport').forEach(el=>el.scrollTo(0,0));frame();
+}
+let delayed;
+turn.oninput=()=>{angle.selectedIndex=Number(turn.value);clearTimeout(delayed);delayed=setTimeout(()=>show().catch(e=>$('error').textContent=e.message),90);};
+function selectKind(){clearTimeout(delayed);angle.replaceChildren(...records[kind.value].angles.map(n=>new Option(n)));show().catch(e=>$('error').textContent=e.message);}
+kind.onchange=selectKind;angle.onchange=()=>show().catch(e=>$('error').textContent=e.message);native.onchange=frame;mix.oninput=blend;
+const ports=document.querySelectorAll('.viewport');for(const [i,p] of ports.entries())p.onscroll=()=>{const q=ports[1-i];if(q.scrollLeft!==p.scrollLeft)q.scrollLeft=p.scrollLeft;if(q.scrollTop!==p.scrollTop)q.scrollTop=p.scrollTop;};
+new ResizeObserver(frame).observe(document.querySelector('.pair'));selectKind();
+</script></body></html>

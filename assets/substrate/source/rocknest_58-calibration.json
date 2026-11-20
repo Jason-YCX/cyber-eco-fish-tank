@@ -1,0 +1,17 @@
+{
+  "heightRatio": 0.06631709,
+  "minHeightMm": -1.0631190058588982,
+  "maxHeightMm": 1.1099592930078488,
+  "texelMm": 0.032,
+  "lightFit": [
+    4.614116921658314,
+    -0.46081230734671225,
+    0.133380099061764,
+    0.17502256713846487
+  ],
+  "lightFitMedian": 4.788647465543242,
+  "sample": "Rocknest, Sol 58",
+  "reliefScale": 0.85,
+  "credit": "NASA/JPL-Caltech/MSSS",
+  "roughness": "estimated"
+}

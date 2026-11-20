@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+*.blend1
+
+# Local comparison sheets with excerpts of third-party footage or photos.
+/design/水族素材纹理/虎纹苦草同叶转角.png
+/design/水族素材纹理/虎纹苦草弯叶与叶脉.png
+/design/水族素材纹理/虎纹苦草同叶翻面核查.png
+/design/水族素材纹理/虎纹苦草叶背推断.png

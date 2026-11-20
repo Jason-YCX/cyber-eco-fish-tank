@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>鱼缸素材 · 实拍与模型</title>
+<style>
+:root{color-scheme:dark;--bg:#152320;--surface:#23332d;--text:#eff4e9;--muted:#bccbc0;--accent:#e3bd78}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,"PingFang SC",sans-serif}
+main{width:min(1490px,100%);margin:auto;padding:30px clamp(16px,3vw,52px) 38px}
+h1{margin:0 0 22px;font-size:clamp(25px,3vw,39px);line-height:1.22;font-weight:600;letter-spacing:.025em}
+nav,.controls,.links,.viewbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px}
+nav{padding-bottom:18px;border-bottom:1px solid #43544a}
+button{font:inherit;color:inherit;background:var(--surface);border:1px solid #536359;border-radius:5px;cursor:pointer;padding:7px 13px}
+button[aria-pressed=true]{background:#e1c797;color:#1a261e;border-color:#e1c797}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+p{color:var(--muted);line-height:1.6;margin:13px 0}.controls{margin:20px 0;gap:12px 24px}
+.controls label{display:flex;align-items:center;gap:8px}.viewbar{margin:14px 0}.viewbar[hidden],.controls[hidden],.frames[hidden]{display:none}select{font:inherit;padding:5px 9px;background:var(--surface);color:var(--text);border:1px solid #536359;border-radius:5px}#sheet{max-width:100%;height:auto;margin-top:12px}input[type=range]{width:clamp(70px,9vw,135px);accent-color:var(--accent)}
+output{font-variant-numeric:tabular-nums;display:inline-block;min-width:3ch}figure{margin:0;min-width:0}
+.frames{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}figcaption{margin-bottom:8px;font-size:15px;font-weight:550}
+canvas{width:100%;display:block;aspect-ratio:4/3;touch-action:none;background:#21312a;border:1px solid #45554a;cursor:grab}
+canvas:active{cursor:grabbing}.links{padding-top:2px}.links a{color:#e4cd96;text-underline-offset:4px;text-decoration-thickness:1px}
+#status{color:#f1bd86}#status:empty{display:none} small{color:#abbbae}
+@media(max-width:650px){main{padding-top:20px}.frames{grid-template-columns:repeat(2,1fr)}figure:last-child{grid-column:1/-1}figure:last-child canvas{max-height:310px;aspect-ratio:2/1}nav{gap:6px}nav button{padding:7px 9px}.controls{gap:10px}h1{margin-bottom:14px}}
+</style>
+<main>
+<h1>鱼缸素材 · 实拍与模型</h1>
+<nav aria-label="选择素材"></nav>
+<label class="viewbar" id="viewbar" hidden>机位 <select id="view" aria-label="选择机位"></select></label>
+<p id="note"></p>
+<img id="sheet" hidden alt="">
+<div class="controls">
+<label>放大 <input id="zoom" type="range" min="1" max="6" value="1" step=".25"><output id="zoomval">1×</output></label>
+<label>叠图中模型占比 <input id="opacity" type="range" min="0" max="100" step="1" value="50"><output id="mixval">50%</output></label>
+<button id="reset" type="button">复位</button><small>拖动任一画面可同步查看同一处。</small>
+</div>
+<div class="frames">
+<figure><figcaption>实拍</figcaption><canvas id="photo" aria-label="实拍图"></canvas></figure>
+<figure><figcaption>模型</figcaption><canvas id="mesh" aria-label="同机位模型图"></canvas></figure>
+<figure><figcaption>叠图</figcaption><canvas id="mix" aria-label="可调透明度的实拍与模型叠图"></canvas></figure>
+</div>
+<p id="status" role="status"></p><p class="links" id="links"></p>
+</main>
+<script>
+'use strict';
+const mast='暖红砂/Mastcam/', detail=mast+'细节/';
+const riverUrl='https://cdn.polyhaven.com/asset_img/renders/ganges_river_pebbles/';
+const riverBoard=['双排实拍、模型与放大叠图','恒河河砾/现场斜拍核对.html'];
+const riverSource=['作者的实拍与扫描','https://polyhaven.com/a/ganges_river_pebbles'];
+const sandLinks=[['双角度放大叠图',mast+'暖红砂双角度对照.png'],['28.4° 单颗粒对照',detail+'暖红砂颗粒斜拍对照.png'],['可旋转的砂样','暖红砂/暖红砂样块.glb']];
+const subjects={
+ plant:{name:'虎纹苦草',views:[
+  {title:'翻到叶背 · 模型推断',note:'同一个叶尖模型翻转 180°。正面由 Tropica 实拍约束，背面的叶脉起伏和透光为推断。对照图标出实拍、模型与轮廓叠图。',sheet:'../虎纹苦草叶背推断.png',links:[['看大图','../虎纹苦草叶背推断.png'],['同株实拍细节','../虎纹苦草弯叶与叶脉.png'],['栽培方原片','https://www.youtube.com/watch?v=jE0xpZRyleo']]},
+  {title:'同叶正面', note:'Tropica 视频 35.7 秒。同一片叶的两侧叶缘可追踪。',photo:['../虎纹苦草同叶转角.png',26,351,270,144],mesh:['../虎纹苦草同叶转角.png',426,351,270,144],
+   links:[['三次转角与叶缘标记','../虎纹苦草同叶转角.png'],['同株弯叶与叶脉','../虎纹苦草弯叶与叶脉.png'],['栽培方原片','https://www.youtube.com/watch?v=jE0xpZRyleo']]},
+  {title:'断尖叶实拍核查',note:'Dustin 的另一株虎纹苦草。三张原图可以追踪同一片断尖叶，粉斑和棕纹始终靠同一侧叶缘。',sheet:'../虎纹苦草同叶翻面核查.png',
+   links:[['种植者的原始图集','https://dustinsfishtanks.com/products/vallisneria-spiralis-leopard']]}]},
+ sand:{name:'暖红砂',views:[
+  {title:'45.7° · 同块砂面',note:'Sol 102，正俯视为 0°。同一块宽 32.768 mm 的砂面用外围 25 个窗口定位。原片约 0.90 mm/像素，可看颗粒群。模型只覆盖有实测高程的区域。',
+   photo:[mast+'0102ML0006750020103025E01_DXXX.jpg',1193,687,44,33],mesh:[mast+'Sol102-模型.png',0,0,44,33],links:[...sandLinks,['NASA 原片',mast+'0102ML0006750020103025E01_DXXX.jpg']]},
+  {title:'49.5° · 低角度日光',note:'Sol 55，距正俯视 49.5°。同一块砂面用外围 58 个窗口定位，原片约 0.70 mm/像素。',photo:[mast+'0055ML0002540080102275E01_DXXX.jpg',173,506,61,39],mesh:[mast+'Sol55-模型.png',0,0,61,39],
+   links:[...sandLinks,['NASA 原片',mast+'0055ML0002540080102275E01_DXXX.jpg']]},
+  {title:'28.4° · 单颗粒细节',note:'Sol 56，右侧长焦相机。样块内独立匹配出 54 对候选，46 对在 2.8 相机像素内。阴影中仍可辨认相邻亮粒，模型的亮粒反差偏弱。',photo:[detail+'0056MR0002620030103095E01_DRXX-实拍.png',287,622,176,170],mesh:[detail+'同机位模型.png',0,0,176,170],links:sandLinks},
+  {title:'8.6° · MAHLI 微距',note:'Sol 58，斜拍近照。233 个留出地标检验同块砂粒。',photo:['暖红砂/原片/0058MH0000320000100491R00_DXXX.jpg',607,550,210,181],mesh:['暖红砂/同机位模型.png',0,0,210,181],links:[['6 倍边缘叠图','暖红砂/暖红砂斜拍与模型.png'],['NASA 原片','https://mars.nasa.gov/raw_images/29145/?site=msl']]}]},
+ gravel:{name:'恒河河砾',views:[
+  {title:'66.8° · 邻近大石群',note:'实拍光轴与河床平均法线约 64.6°，这一裁切中心的视线约 66.8°。Amal Kumar 拍摄的恒河河床。可辨认带褐纹的大石、浅色长石和石缝。实拍取自 Poly Haven，打开此项需要联网。',photo:[riverUrl+'context_02.jpg',803,335,550,282],mesh:['恒河河砾/现场斜拍同机位模型.png',0,0,550,282],links:[riverBoard,riverSource]},
+  {title:'70.2° · 原样块交集',note:'在现场斜拍中找回色卡近照同一组石头，视线离床面法线约 70.2°。前排褐石遮住了较矮的部分，后方浅灰圆石与右侧浅色小石可辨。原近照视野在此张现场原片中仅约 51 × 25 像素。',photo:[riverUrl+'context_02.jpg',615,283,196,97],mesh:['恒河河砾/现场交集同机位模型.png',0,0,196,97],links:[riverBoard,riverSource]},
+  {title:'4.7° · 色卡旁近照',note:'同一片河床的色卡近照，原有石群约偏离正俯视 4.7°。实拍取自 Poly Haven，打开此项需要联网。',photo:[riverUrl+'spec_01.jpg',590,170,640,464],mesh:['恒河河砾/同机位模型.png',0,0,640,464],links:[riverBoard,riverSource]}]},
+ soil:{name:'黑褐草泥',views:[
+  {title:'49° · 同块褐土',note:'德累斯顿工大的同一块框内褐土，第三台相机约 49°。放大可检查泥团和碎屑。',photo:['草泥/原片/IMG_0034.jpg',2830,1155,176,132],mesh:['草泥/同机位模型.png',0,0,176,132],
+   links:[['6 倍边缘叠图','草泥/草泥斜拍与模型.png'],['三维样块','草泥/草泥样块.glb'],['原始数据','https://doi.org/10.25532/OPARA-1038']]}]}
+};
+const $=id=>document.getElementById(id),nav=document.querySelector('nav'),canvases=[$('photo'),$('mesh'),$('mix')];
+const imageCache=new Map();let current,version=0,images=[],centre=[.5,.5],drag;
+function read(url){
+ if(!imageCache.has(url))imageCache.set(url,new Promise((resolve,reject)=>{
+  const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error(url));im.src=url;
+ }).catch(e=>{imageCache.delete(url);throw e}));
+ return imageCache.get(url);
+}
+function draw(){
+ if(!current?.photo)return;
+ const scale=+$('zoom').value,alpha=+$('opacity').value/100;
+ $('zoomval').value=scale+'×';$('mixval').value=Math.round(alpha*100)+'%';
+ canvases.forEach((canvas,i)=>{
+  const ratio=Math.min(devicePixelRatio||1,2),box=canvas.getBoundingClientRect();
+  canvas.width=Math.round(box.width*ratio);canvas.height=Math.round(box.height*ratio);
+  const g=canvas.getContext('2d');g.clearRect(0,0,canvas.width,canvas.height);
+  const area=current.photo, fit=Math.min(canvas.width/area[3],canvas.height/area[4]);
+  const w=area[3]*fit*scale,h=area[4]*fit*scale;
+  canvas.renderSize=[w/ratio,h/ratio];
+  function layer(index,opacity){
+   if(!images[index])return;
+   const a=index===0?current.photo:current.mesh;
+   g.globalAlpha=opacity;g.imageSmoothingEnabled=scale<3;
+   g.drawImage(images[index],a[1],a[2],a[3],a[4],canvas.width/2-centre[0]*w,canvas.height/2-centre[1]*h,w,h);
+  }
+  if(i!==1)layer(0,1);
+  if(i!==0)layer(1,i===1?1:alpha);
+ });
+}
+function reset(){centre=[.5,.5];$('zoom').value=1;$('opacity').value=50;draw()}
+function clamp(){const half=.5/(+$('zoom').value);centre=centre.map(v=>Math.max(half,Math.min(1-half,v)))}
+async function select(id,viewIndex=0){
+ const token=++version,group=subjects[id],subject=group.views[viewIndex];
+ current=subject;images=[];drag=null;
+ for(const b of nav.children)b.setAttribute('aria-pressed',b.dataset.key===id);
+ $('viewbar').hidden=group.views.length===1;
+ $('view').replaceChildren(...group.views.map((v,i)=>new Option(v.title,i)));
+ $('view').selectedIndex=viewIndex;
+ $('view').onchange=()=>select(id,Number($('view').value));
+ document.querySelector('.controls').hidden=Boolean(subject.sheet);
+ document.querySelector('.frames').hidden=Boolean(subject.sheet);
+ $('sheet').hidden=!subject.sheet;
+ $('note').textContent=subject.note;
+ $('status').textContent='读取图片中…';$('links').replaceChildren();
+ for(const [text,url] of subject.links){const a=document.createElement('a');a.textContent=text;a.href=url;a.target='_blank';a.rel='noopener';$('links').append(a)}
+ if(subject.sheet){
+  $('sheet').alt=subject.title;
+  $('sheet').removeAttribute('src');
+  try{const im=await read(subject.sheet);if(version===token){$('sheet').src=im.src;$('status').textContent=''}}
+  catch{if(version===token)$('status').textContent='对照图未载入，请从本项目目录打开此页。'}
+  return;
+ }
+ reset();
+ const result=await Promise.allSettled([read(subject.photo[0]),read(subject.mesh[0])]);
+ if(version!==token)return;
+ images=result.map(v=>v.status==='fulfilled'?v.value:null);
+ $('status').textContent=images.every(Boolean)?'':(images[1]?'原片暂未载入。可从下方来源打开原片，再重新选择此素材。':'模型图片未载入，请从本项目目录打开此页。');draw();
+}
+for(const [key,subject] of Object.entries(subjects)){
+ const b=document.createElement('button');b.type='button';b.dataset.key=key;b.textContent=subject.name;
+ b.onclick=()=>{if(location.hash==='#'+key)select(key);else location.hash=key};nav.append(b);
+}
+for(const canvas of canvases){
+ canvas.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,centre:[...centre]};canvas.setPointerCapture(e.pointerId)};
+ canvas.onpointermove=e=>{if(!drag)return;centre=[drag.centre[0]-(e.clientX-drag.x)/canvas.renderSize[0],drag.centre[1]-(e.clientY-drag.y)/canvas.renderSize[1]];clamp();draw()};
+ canvas.onpointerup=canvas.onpointercancel=()=>{drag=null};
+}
+$('zoom').oninput=()=>{clamp();draw()};$('opacity').oninput=draw;$('reset').onclick=reset;
+const fromHash=()=>select(Object.hasOwn(subjects,location.hash.slice(1))?location.hash.slice(1):'plant');
+window.addEventListener('hashchange',fromHash);window.addEventListener('resize',draw);fromHash();
+</script>
+</html>

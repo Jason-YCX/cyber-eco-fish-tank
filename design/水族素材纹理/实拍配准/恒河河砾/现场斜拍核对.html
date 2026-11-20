@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>恒河河砾 · 现场斜拍核对</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#131a1a;color:#edf1ea;font:16px/1.6 system-ui,sans-serif}main{max-width:1520px;margin:auto;padding:24px clamp(14px,3vw,42px) 50px}h1,h2,p,figure{margin:0}h1{font-size:clamp(25px,3vw,40px)}h2{font-size:21px;margin-top:23px}p,figcaption{color:#c4cfca}section>p{margin-bottom:8px}a{color:#a6e7d4}nav,.controls{display:flex;align-items:center;gap:15px;flex-wrap:wrap}nav{margin:10px 0 12px;font-size:14px}.controls{padding:10px 0;border-block:1px solid #43534e}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}svg.frame{display:block;width:100%;height:auto;background:#263330;border:1px solid #41544f}figcaption{font-size:14px;margin-bottom:3px}.legend{display:flex;gap:15px;flex-wrap:wrap}.swatch::before{display:inline-block;width:18px;height:3px;content:"";vertical-align:middle;background:var(--ink);margin-right:4px}.overview{max-width:800px}label{cursor:pointer}input[type=range]{width:min(26vw,190px);vertical-align:middle}details{margin:12px 0}input[type=file]{max-width:275px}small{font-size:13px;color:#c3cec8}@media(max-width:760px){.grid{grid-template-columns:1fr}.grid figure{max-width:570px}h2{font-size:19px}.controls{gap:8px}}
+</style>
+<main>
+<h1>恒河河砾 · 现场斜拍核对</h1>
+<p>镜头光轴离河床法线 64.6°。沿原片中石群的位置计算，邻近大石群中心约 66.8°，原近拍石群中心约 70.2°。每排前两幅显示同一窗口，第三幅放大其中的石群。</p>
+<nav><a href="https://cdn.polyhaven.com/asset_img/renders/ganges_river_pebbles/context_02.jpg">现场斜拍原片</a><a href="https://cdn.polyhaven.com/asset_img/renders/ganges_river_pebbles/spec_01.jpg">此前近拍原片</a><a href="https://polyhaven.com/a/ganges_river_pebbles">Amal Kumar / Poly Haven 资产</a><a href="现场斜拍机位与地标.json">机位与地标数据</a></nav>
+<div class="controls"><label>叠图中模型占比 <input id="opacity" type="range" min="0" max="100" value="50"> <output id="value">50%</output></label></div>
+<section><h2>现场石群</h2><p>可以跟着奶白卵石的左缘、旁边浅石的细纹和后方紫褐石之间的缝隙切换。几块陡立石头的下缘仍有纵向拉伸。</p><div class="grid" id="large"></div></section>
+<section><h2>上一张近拍对应的石群</h2><p>现场原片中，旧近拍窗口仅占约 51 × 25 像素。浅灰圆石及右侧小浅石仍可辨认，前排横卧的褐石遮住了它们的根部。可用末幅中的开关核对这个范围。</p><div class="grid" id="small"></div><label><input id="bounds" type="checkbox"> 在交集上标出旧近拍窗口</label></section>
+<section><h2>在原片中定位</h2><div class="legend"><span class="swatch" style="--ink:#19c4bb">整幅河床扫描，缸内宽 82 mm</span><span class="swatch" style="--ink:#ffcd46">已校正的高清区，缸内宽 10.25 mm</span><span class="swatch" style="--ink:#f9659b">旧近拍的 640 × 464 窗口</span></div><div class="overview" id="map"></div></section>
+<details><summary>查看测量和原图加载说明</summary><p>生产网格在现场窗口的 113 个留出候选位置中，重新找到 41 个清晰地标，中位误差 2.24 像素，90% 在 4.12 像素以内。用同一批 15 个独立图像对应点比较，高程模型的中位误差为 3.08 像素，平面为 7.60 像素。</p><p>照片由 Amal Kumar 拍摄，默认从原站载入。已有该现场 JPEG 时也可本地选择。完整原片为 1600 × 1067。<a href="https://polyhaven.com/license">Poly Haven 许可与网站条款</a></p><input id="file" type="file" accept="image/jpeg,image/png"><span id="status" role="status"></span></details>
+</main>
+<script>
+const ns='http://www.w3.org/2000/svg',photo='https://cdn.polyhaven.com/asset_img/renders/ganges_river_pebbles/context_02.jpg';
+const scene={bounds:[0,0,1600,1067],url:photo,photo:true};
+const large={bounds:[803,335,550,282],url:'现场斜拍同机位模型.png'},small={bounds:[615,283,196,97],url:'现场交集同机位模型.png'};
+const pictures=[],layers=[],outlines=[];
+function svgNode(tag,attrs){const n=document.createElementNS(ns,tag);for(const [key,value] of Object.entries(attrs))n.setAttribute(key,value);return n}
+function picture(svg,source,alpha=1){
+ const [x,y,width,height]=source.bounds,im=svgNode('image',{href:source.url,x,y,width,height,opacity:alpha,preserveAspectRatio:'none'});svg.append(im);
+ if(source.photo)pictures.push(im);return im
+}
+function frame(root,caption,crop,options={}){
+ const fig=document.createElement('figure'),label=document.createElement('figcaption');label.textContent=caption;fig.append(label);
+ const svg=svgNode('svg',{viewBox:crop.join(' '),class:'frame',width:crop[2],height:crop[3],role:'img','aria-label':caption});fig.append(svg);
+ if(options.photo)picture(svg,scene);
+ if(options.model){const layer=picture(svg,options.model,options.overlay?.5:1);if(options.overlay)layers.push(layer)}
+ if(options.mark){const p=svgNode('polygon',{points:'699.4,319.1 739.4,332.3 729,343.5 688.6,336.8',fill:'none',stroke:'#f9659b','stroke-width':'.7',display:'none'});svg.append(p);outlines.push(p)}
+ if(options.map)picture(svg,{bounds:scene.bounds,url:'现场样块轮廓.svg'});
+ document.getElementById(root).append(fig)
+}
+for(const [id,mod,zoom,title] of [['large',large,[880,480,205,130],'奶白石及邻石'],['small',small,[682,312,67,36],'原近拍交集']]){
+ const mark=id==='small';frame(id,'实拍',mod.bounds,{photo:true,mark});frame(id,'同机位模型',mod.bounds,{model:mod,mark});frame(id,'放大叠图 · '+title,zoom,{photo:true,model:mod,overlay:true,mark})
+}
+frame('map','现场原片与扫描范围',scene.bounds,{photo:true,map:true});
+const slider=document.querySelector('#opacity');slider.oninput=()=>{document.querySelector('#value').value=slider.value+'%';layers.forEach(i=>i.setAttribute('opacity',Number(slider.value)/100))};
+document.querySelector('#bounds').oninput=e=>outlines.forEach(i=>i.setAttribute('display',e.target.checked?'inline':'none'));
+let selected;document.querySelector('#file').onchange=async e=>{const file=e.target.files[0];if(!file)return;const url=URL.createObjectURL(file),i=new Image();i.src=url;const msg=document.querySelector('#status');try{
+ await i.decode();if(i.width!==1600||i.height!==1067)throw Error('需要 1600 × 1067 的现场原片。');pictures.forEach(n=>n.setAttribute('href',url));if(selected)URL.revokeObjectURL(selected);selected=url;msg.textContent='已从本地载入 '+file.name
+ }catch(err){URL.revokeObjectURL(url);msg.textContent=err.message}};
+</script></html>
